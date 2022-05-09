@@ -5,8 +5,7 @@ import (
 	"regexp"
 )
 
-// TestHelloName calls greetings.Hello with a name, checking
-// for a valid return value.
+// TestHelloFuncWithName calls greetings.Hello with a name, checking for a valid return value.
 func TestHelloFuncWithName(t *testing.T) {
     name := "Gladys"
     want := regexp.MustCompile(`\b`+name+`\b`)
@@ -16,8 +15,7 @@ func TestHelloFuncWithName(t *testing.T) {
     }
 }
 
-// TestHelloEmpty calls greetings.Hello with an empty string,
-// checking for an error.
+// TestHelloFuncWithEmptyStr calls greetings.Hello with an empty string, checking for an error.
 func TestHelloFuncWithEmptyStr(t *testing.T) {
     msg, err := Hello("")
     if msg != "" || err == nil {
@@ -25,6 +23,7 @@ func TestHelloFuncWithEmptyStr(t *testing.T) {
     }
 }
 
+// TestHelloFuncWithWhitespace calls greetings.Hello with a whitespace, checking for an error.
 func TestHelloFuncWithWhitespace(t *testing.T) {
     msg, err := Hello(" ")
     if msg != "" || err == nil {
@@ -32,6 +31,7 @@ func TestHelloFuncWithWhitespace(t *testing.T) {
     }
 }
 
+// TestHellosFuncWithNamesArray calls greetings.Hellos with a predefined string array, checking for an error.
 func TestHellosFuncWithNamesArray(t *testing.T) {
 	names := []string { "Gladys", "Joe " }
 	messages, err := Hellos(names)
@@ -41,6 +41,7 @@ func TestHellosFuncWithNamesArray(t *testing.T) {
 
 }
 
+// TestHellosFuncWithEmptyArray calls greetings.Hellos with an empty string array, checking for an error.
 func TestHellosFuncWithEmptyArray(t *testing.T) {
 	messages, err := Hellos([]string {})
 	if err != nil {
