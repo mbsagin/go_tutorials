@@ -2,12 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"log"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type album struct {
@@ -27,23 +30,49 @@ func init() {
 
 func main() {
 	router := gin.Default()
-	router.GET("/albums", getAlbums)
-	router.POST("/albums", postAlbum)
+
+	router.GET("/album/:id", getAlbumById)
+	router.GET("/albums", getAllAlbums)
+	
+	router.POST("/album", postAlbum)
+	router.POST("/albums", postAlbums)
 
 	router.Run("localhost:8080")
 }
 
-func getAlbums(c *gin.Context) {
+func getAlbumById(c *gin.Context) {
+	// Requested album id
+	albumId := c.Param("id")
+
+	for _, a := range albums {
+		if a.ID == albumId {
+			c.IndentedJSON(http.StatusOK, a)
+			return
+		}
+	}
+
+	errorMessage := "Album could not found with the ID " + albumId;
+	logError(errors.New(errorMessage))
+
+	c.IndentedJSON(http.StatusNotFound, gin.H{ "isError": true, "message": errorMessage })
+}
+
+// GET all the albums
+func getAllAlbums(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, albums)
 }
 
+// POST an album
 func postAlbum(c *gin.Context) {
 	var newAlbum album
 
 	err := c.BindJSON(&newAlbum)
 
     if err != nil {
-        fmt.Println(err)
+		logError(err)
+		
+		c.IndentedJSON(http.StatusUnprocessableEntity, newAlbum)
+
 		return
     }
 
@@ -52,13 +81,33 @@ func postAlbum(c *gin.Context) {
     c.IndentedJSON(http.StatusCreated, newAlbum)
 }
 
+// POST albums
+func postAlbums(c *gin.Context) {
+	var newAlbums []album
+
+	err := c.BindJSON(&newAlbums)
+
+    if err != nil {
+        logError(err)
+		
+		c.IndentedJSON(http.StatusUnprocessableEntity, newAlbums)
+
+		return
+    }
+
+    albums = append(albums, newAlbums...)
+
+    c.IndentedJSON(http.StatusCreated, newAlbums)
+}
+
+// JSON file reader
 func readJson(fileName string) []byte {
 	jsonFile, err := os.Open(fileName)
 
 	fmt.Println(jsonFile)
 
 	if err != nil {
-		fmt.Println(err)
+		logError(err)
 	}
 	
 	bytes, err := ioutil.ReadAll(jsonFile)
@@ -66,9 +115,21 @@ func readJson(fileName string) []byte {
 	jsonFile.Close()
 
 	if err != nil {
-		fmt.Println(err)
+		logError(err)
 	}
 
 	return bytes
 }
 
+// Error logger, TODO: Log errors to DB with traceId
+func logError(err error) {
+	traceId := uuid.New()
+
+	log.SetPrefix("["+traceId.String()+"]")
+    log.SetFlags(0)
+	
+
+	log.Println(err)
+
+	// TODO: DB insert
+}
